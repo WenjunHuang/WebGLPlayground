@@ -1,7 +1,7 @@
 package webgl
 
 import org.scalajs.dom.html
-import org.scalajs.dom.raw.WebGLRenderingContext
+import org.scalajs.dom.raw.{WebGLProgram, WebGLRenderingContext}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExport
@@ -10,18 +10,20 @@ import scala.util.Success
 
 @JSExport
 object MultiPoints {
+  import WebGLRenderingContext._
   val VShaderSource = VShader(
     """
       |attribute vec4 a_Position;
       |void main(){
       |    gl_Position = a_Position;
-      |    gl_PointSize = 10.0;
       |}
     """.stripMargin)
 
   val FShaderSource =FShader(
     """
-      |
+      |void main(){
+      | gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+      |}
     """.stripMargin)
 
   @JSExport
@@ -31,15 +33,29 @@ object MultiPoints {
       case Success(program) =>
         gl.clearColor(0.0,0.0,0.0,1.0)
         gl.clear(WebGLRenderingContext.COLOR_BUFFER_BIT)
+        val n = initVertexBuffers(gl,program)
+        gl.useProgram(program)
+        gl.drawArrays(TRIANGLE_STRIP,0,n)
     }
   }
 
-  private def initVertexBuffers(gl:WebGLRenderingContext) = {
-    val vertices = new Float32Array(js.Array(0.0f,0.5f,-0.5f,-0.5f,0.5f,-0.5f))
-    val n =3
+  private def initVertexBuffers(gl:WebGLRenderingContext,program:WebGLProgram) :Int= {
+    val vertices = new Float32Array(js.Array(
+      -0.5f,0.5f,
+      -0.5f,-0.5f,
+      0.5f,0.5f,
+      0.5f,-0.5f))
+    val n =4
+
+
     val vertexBuffer = gl.createBuffer()
-    gl.bindBuffer(WebGLRenderingContext.ARRAY_BUFFER,vertexBuffer)
-    gl.bufferData(WebGLRenderingContext.ARRAY_BUFFER,vertices,WebGLRenderingContext.STATIC_DRAW)
+    gl.bindBuffer(ARRAY_BUFFER,vertexBuffer)
+    gl.bufferData(ARRAY_BUFFER,vertices,WebGLRenderingContext.STATIC_DRAW)
+
+    val a_Position = gl.getAttribLocation(program,"a_Position")
+    gl.vertexAttribPointer(a_Position,2,WebGLRenderingContext.FLOAT,false,0,0)
+    gl.enableVertexAttribArray(a_Position)
+    n
   }
 
 

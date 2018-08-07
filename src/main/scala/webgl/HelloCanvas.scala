@@ -30,6 +30,8 @@ object HelloCanvas {
   @JSExport
   def main(canvas: html.Canvas) = {
     val gl = canvas.getContext("webgl").asInstanceOf[WebGLRenderingContext]
+    val mat2 = glmatrix.mat2.create()
+    println(mat2)
 
     initShaders(gl,vshader,fshader) match {
       case Success(program) =>
